@@ -24,7 +24,7 @@
     return Promise.all(ids.map(function (id) {
       return new Promise(function (ok, no) {
         var s = document.createElement('script');
-        s.src = 'data/' + id + '.js'; s.onload = ok;
+        s.src = id + '.js'; s.onload = ok;
         s.onerror = function () { no(id); };
         document.head.appendChild(s);
       });
