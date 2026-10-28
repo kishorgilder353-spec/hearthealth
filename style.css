@@ -36,3 +36,5 @@ summary{cursor:pointer;font-weight:600}
 li{margin:.5em 0}
 ul.hl{padding-left:1.1em}
 footer{margin-top:32px;padding-top:14px;border-top:1px solid var(--line)}
+.sub{background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:12px 16px;margin:12px 0}
+.sub h3{margin:0}.sub .score{font-size:1.6rem}.sub .bar{margin:10px 0 14px}

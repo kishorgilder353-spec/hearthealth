@@ -79,7 +79,7 @@
     shell([
       h('p', {class: 'mute'}, I.t('progress', {n: i + 1, m: n})),
       h('div', {class: 'prog'}, h('i', {style: 'width:' + Math.round(i / n * 100) + '%'})),
-      i === 0 ? h('p', {class: 'mute'}, I.pick(T.instruction)) : null,
+      h('p', {class: 'mute'}, I.pick(T.instruction)),
       h('p', {class: 'q'}, I.pick(T.items[i])),
       opts,
       i > 0 ? h('button', {class: 'btn ghost', onclick: function () { st.idx = i - 1; render(); }}, I.t('back')) : null
@@ -96,25 +96,36 @@
       h('p', {class: 'mute'}, I.t('hotMore')));
   }
 
+  function bar(levels, max, total) {
+    var prev = -1, n = levels.length, segs = levels.map(function (L, k) {
+      var top = Math.min(L.max, max), w = (top - prev) / (max + 1) * 100; prev = top;
+      return h('span', {class: 'seg s' + (n > 1 ? Math.round(k * 4 / (n - 1)) : 0), style: 'width:' + w + '%'});
+    });
+    return h('div', {class: 'bar'}, segs, h('i', {class: 'mk', style: 'left:' + ((total + 0.5) / (max + 1) * 100) + '%'}));
+  }
+
   function result() {
     var T = TESTS[qid]; if (!T) return missing('notFound');
     var ans = null; try { ans = JSON.parse(sessionStorage.getItem('ans_' + T.id)); } catch (e) {}
     var r = ans && E.score(T, ans); if (!r) return missing('noAns');
-    var prev = -1, segs = T.levels.map(function (L, k) {
-      var w = (L.max - prev) / (r.max + 1) * 100; prev = L.max;
-      return h('span', {class: 'seg s' + k, style: 'width:' + w + '%'});
-    });
     var title = I.pick(T.title);
-    shell([
-      r.flagged ? h('div', {class: 'warn', role: 'region'}, h('h3', {}, I.t('safeTitle')), h('p', {}, I.t('safeBody'))) : null,
-      h('p', {class: 'mute'}, title),
+    var body = r.subs ? r.subs.map(function (s) {
+      return h('section', {class: 'sub'}, h('h3', {}, I.pick(s.title)),
+        h('p', {class: 'score'}, s.total + ' ', h('small', {}, '/ ' + s.max + ' · ' + I.pick(s.level.title))),
+        bar(s.levels, s.max, s.total), h('p', {}, I.pick(s.level.desc)));
+    }) : [
       h('h1', {}, I.pick(r.level.title)),
       h('p', {class: 'score'}, r.total + ' ', h('small', {}, '/ ' + r.max)),
-      h('div', {class: 'bar'}, segs, h('i', {class: 'mk', style: 'left:' + ((r.total + 0.5) / (r.max + 1) * 100) + '%'})),
+      bar(T.levels, r.max, r.total),
       h('p', {}, I.pick(r.level.desc)),
-      h('p', {}, I.pick(r.level.advice)),
+      h('p', {}, I.pick(r.level.advice))
+    ];
+    shell([
+      r.flagged ? h('div', {class: 'warn', role: 'region'}, h('h3', {}, I.t('safeTitle')), h('p', {}, I.t('safeBody'))) : null,
+      r.subs ? h('h1', {}, title) : h('p', {class: 'mute'}, title),
+      body,
       h('p', {class: 'mute'}, I.t('notDx')),
-      hotlines(r.flagged || r.levelIndex >= 3),
+      hotlines(r.flagged || r.worst >= 3),
       h('p', {class: 'mute'}, I.t('source') + ': ' + T.source),
       h('a', {class: 'btn', href: 'test.html?t=' + T.id}, I.t('retake')),
       h('a', {class: 'btn ghost', href: 'index.html'}, I.t('home'))
