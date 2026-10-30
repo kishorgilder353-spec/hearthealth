@@ -44,7 +44,7 @@
   function missing(key) { shell([h('p', {}, I.t(key)), h('a', {class: 'btn', href: 'index.html'}, I.t('home'))]); }
 
   function home() {
-    var groups = {}, order = ['mood', 'personality'];
+    var groups = {}, order = ['mood', 'personality', 'other'];
     window.TEST_IDS.forEach(function (id) { var T = TESTS[id]; (groups[T.category] = groups[T.category] || []).push(T); });
     var out = [h('h1', {}, I.t('title')), h('p', {class: 'mute'}, I.t('tagline'))];
     order.forEach(function (c) {
@@ -66,7 +66,7 @@
       return shell([h('h1', {}, title), h('p', {}, I.pick(T.intro)), h('p', {class: 'mute'}, I.t('notDx')),
         h('button', {class: 'btn', onclick: function () { st.idx = 0; render(); }}, I.t('start'))], title);
     }
-    var opts = T.options.map(function (o) {
+    var opts = (T.items[i].options || T.options).map(function (o) {
       return h('button', {class: 'opt' + (st.ans[i] === o.v ? ' on' : ''), onclick: function () {
         st.ans[i] = o.v;
         if (i + 1 < n) { st.idx = i + 1; render(); }
@@ -96,10 +96,10 @@
       h('p', {class: 'mute'}, I.t('hotMore')));
   }
 
-  function bar(levels, max, total) {
+  function bar(levels, max, total, inv) {
     var prev = -1, n = levels.length, segs = levels.map(function (L, k) {
       var top = Math.min(L.max, max), w = (top - prev) / (max + 1) * 100; prev = top;
-      return h('span', {class: 'seg s' + (n > 1 ? Math.round(k * 4 / (n - 1)) : 0), style: 'width:' + w + '%'});
+      return h('span', {class: 'seg s' + (n > 1 ? (inv ? 4 - Math.round(k * 4 / (n - 1)) : Math.round(k * 4 / (n - 1))) : 0), style: 'width:' + w + '%'});
     });
     return h('div', {class: 'bar'}, segs, h('i', {class: 'mk', style: 'left:' + ((total + 0.5) / (max + 1) * 100) + '%'}));
   }
@@ -116,7 +116,7 @@
     }) : [
       h('h1', {}, I.pick(r.level.title)),
       h('p', {class: 'score'}, r.total + ' ', h('small', {}, '/ ' + r.max)),
-      bar(T.levels, r.max, r.total),
+      bar(T.levels, r.max, r.total, T.higherBetter),
       h('p', {}, I.pick(r.level.desc)),
       h('p', {}, I.pick(r.level.advice))
     ];
@@ -125,7 +125,7 @@
       r.subs ? h('h1', {}, title) : h('p', {class: 'mute'}, title),
       body,
       h('p', {class: 'mute'}, I.t('notDx')),
-      hotlines(r.flagged || r.worst >= 3),
+      hotlines(r.flagged || r.alert || r.worst >= 3),
       h('p', {class: 'mute'}, I.t('source') + ': ' + T.source),
       h('a', {class: 'btn', href: 'test.html?t=' + T.id}, I.t('retake')),
       h('a', {class: 'btn ghost', href: 'index.html'}, I.t('home'))
